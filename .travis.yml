@@ -1,0 +1,33 @@
+language: python
+dist: noble
+
+python:
+  - "3.14"
+
+install:
+  - pip install -r requirements-dev.txt
+
+before_script:
+  - python manage.py migrate
+  - python manage.py collectstatic --noinput
+
+script:
+  - black --check .
+  - flake8 .
+  - coverage run --source=mysite,polls manage.py test
+
+after_success:
+  - coveralls
+
+deploy:
+  provider: elasticbeanstalk
+  edge: true
+  access_key_id: $AWS_ACCESS_KEY_ID
+  secret_access_key: $AWS_SECRET_ACCESS_KEY
+  region: us-east-1
+  app: django-polls
+  env: django-polls-env
+  bucket: elasticbeanstalk-us-east-1-431251892869
+  bucket_path: django-polls
+  on:
+    branch: main
